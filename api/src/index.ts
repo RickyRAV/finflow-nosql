@@ -5,14 +5,22 @@ import { etag } from 'hono/etag'
 import { logger } from 'hono/logger'
 import { prettyJSON } from "hono/pretty-json";
 import api from './api';
+import { ensureCollections } from './db/collections';
+import { apiReference } from '@scalar/hono-api-reference'
 
 const app = new Hono()
 
 // Middlewares
-app.use(logger(), etag(), prettyJSON(), cors());
+app.use('*', logger(), etag(), prettyJSON(), cors());
+
+// Ensure collections exist
+app.use('*', async (c, next) => {
+  await ensureCollections(c);
+  await next();
+});
 
 // define routes
-const routes = app.route('/api', api
+const routes = app.route('/api', api)
   .get('/openapi',
     openAPISpecs(app, {
       documentation: {
@@ -34,8 +42,13 @@ const routes = app.route('/api', api
       },
     }),
   )
-);
-
+  .get(
+  '/docs',
+  apiReference({
+    theme: 'saturn',
+    spec: { url: '/openapi' },
+  })
+)
 
 export default app;
 export type AppType = typeof routes;

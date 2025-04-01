@@ -1,0 +1,135 @@
+@baseUrl = http://localhost:8787/api/v1
+@transactionsUrl = {{baseUrl}}/transactions
+@accountsUrl = {{baseUrl}}/accounts
+
+### Create checking account
+POST {{accountsUrl}}
+Content-Type: application/json
+
+{
+    "name": "Main Checking",
+    "type": "checking",
+    "balance": 0,
+    "currency": "USD",
+    "isActive": true,
+    "description": "Primary checking account"
+}
+
+### Create savings account
+POST {{accountsUrl}}
+Content-Type: application/json
+
+{
+    "name": "Savings",
+    "type": "savings",
+    "balance": 0,
+    "currency": "USD",
+    "isActive": true,
+    "description": "Main savings account"
+}
+
+### Get all accounts
+GET {{accountsUrl}}
+
+### Get account by ID
+GET {{accountsUrl}}/8458
+
+### Update account
+PUT {{accountsUrl}}/8458
+Content-Type: application/json
+
+{
+    "name": "Updated Account Name",
+    "type": "checking",
+    "balance": 1000,
+    "currency": "USD",
+    "isActive": true,
+    "description": "Updated description"
+}
+
+### Delete account
+DELETE {{accountsUrl}}/8250
+
+### Create a new transaction
+POST {{transactionsUrl}}
+Content-Type: application/json
+
+{
+    "amount": 1500.00,
+    "description": "Monthly Salary",
+    "date": "2024-04-01",
+    "categoryId": "salary",
+    "type": "income",
+    "accountId": "8458",
+    "tags": ["salary", "monthly"],
+    "notes": "Regular monthly salary deposit"
+}
+
+### Create an expense transaction
+POST {{transactionsUrl}}
+Content-Type: application/json
+
+{
+    "amount": 85.50,
+    "description": "Grocery Shopping",
+    "date": "2024-04-02",
+    "categoryId": "groceries",
+    "type": "expense",
+    "accountId": "8458",
+    "tags": ["food", "essentials"],
+    "notes": "Weekly grocery shopping"
+}
+
+### Get all transactions (with pagination and filters)
+GET {{transactionsUrl}}?page=1&limit=10&type=expense
+
+### Get all transactions for a date range
+GET {{transactionsUrl}}?startDate=2024-04-01&endDate=2024-04-30&type=expense
+
+### Get transaction by ID
+GET {{transactionsUrl}}/9561
+
+### Update transaction
+PUT {{transactionsUrl}}/9561
+Content-Type: application/json
+
+{
+    "amount": 82.30,
+    "description": "Grocery Shopping (Updated)",
+    "date": "2024-04-02",
+    "categoryId": "groceries",
+    "type": "expense",
+    "accountId": "checking",
+    "tags": ["food", "essentials"],
+    "notes": "Updated amount for weekly grocery"
+}
+
+### Delete transaction
+DELETE {{transactionsUrl}}/9561
+
+### Get Sankey diagram data
+GET {{transactionsUrl}}/sankey?startDate=2024-04-01&endDate=2024-04-30
+
+### Get monthly report
+GET {{transactionsUrl}}/report/2024/4
+
+### Get filtered transactions by category
+GET {{transactionsUrl}}?categoryId=groceries&page=1&limit=20
+
+### Get all income transactions
+GET {{transactionsUrl}}?type=income&page=1&limit=20
+
+### Create a transfer transaction
+POST {{transactionsUrl}}
+Content-Type: application/json
+
+{
+    "amount": 500.00,
+    "description": "Transfer to Savings",
+    "date": "2024-04-03",
+    "categoryId": "transfer",
+    "type": "transfer",
+    "accountId": "8458",
+    "tags": ["transfer", "savings"],
+    "notes": "Monthly savings transfer"
+}
