@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { CalendarIcon, CheckIcon, ChevronsUpDownIcon } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
@@ -20,45 +20,135 @@ import { Input } from "@/components/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useForm } from "react-hook-form"
+import { useTransactionStore } from "@/lib/store/transaction-store"
+import { useCategoryStore } from "@/lib/store/category-store"
+import { useAccountStore } from "@/lib/store/account-store"
+import { z } from "zod"
+import { zodResolver } from "@hookform/resolvers/zod"
 
-const categories = [
-  { label: "Food", value: "food" },
-  { label: "Housing", value: "housing" },
-  { label: "Transportation", value: "transportation" },
-  { label: "Entertainment", value: "entertainment" },
-  { label: "Others", value: "others" },
-]
+const transactionFormSchema = z.object({
+  amount: z.string().min(1, "Amount is required"),
+  description: z.string(),
+  categoryId: z.string().min(1, "Category is required"),
+  date: z.date(),
+  type: z.enum(["income", "expense", "transfer"]),
+  accountId: z.string().min(1, "Account is required"),
+})
+
+type TransactionFormValues = z.infer<typeof transactionFormSchema>
 
 export function AddTransactionModal({
   open,
   onOpenChange,
+  transactionToEdit,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
+  transactionToEdit?: any
 }) {
-  const form = useForm({
+  const { addTransaction, updateTransaction } = useTransactionStore()
+  const { categories, fetchCategories } = useCategoryStore()
+  const { accounts, fetchAccounts } = useAccountStore()
+
+  const form = useForm<TransactionFormValues>({
+    resolver: zodResolver(transactionFormSchema),
     defaultValues: {
       amount: "",
       description: "",
-      category: "",
+      categoryId: "",
       date: new Date(),
       type: "expense",
+      accountId: "",
     },
   })
 
+  useEffect(() => {
+    if (transactionToEdit) {
+      form.reset({
+        amount: transactionToEdit.amount.toString(),
+        description: transactionToEdit.description,
+        categoryId: transactionToEdit.category,
+        date: new Date(transactionToEdit.date),
+        type: transactionToEdit.type,
+        accountId: transactionToEdit.accountId,
+      })
+    } else {
+      form.reset({
+        amount: "",
+        description: "",
+        categoryId: "",
+        date: new Date(),
+        type: "expense",
+        accountId: accounts.length > 0 ? (accounts[0].id || accounts[0]._key || "") : "",
+      })
+    }
+  }, [transactionToEdit, form, accounts])
+
+  useEffect(() => {
+    console.log("AddTransactionModal: Fetching categories and accounts")
+    const loadData = async () => {
+      try {
+        if (categories.length === 0) {
+          await fetchCategories()
+        }
+        
+        if (accounts.length === 0) {
+          await fetchAccounts()
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error)
+      }
+    }
+    
+    loadData()
+  }, [fetchCategories, fetchAccounts, categories.length, accounts.length])
+
   const [openCategoryCombobox, setOpenCategoryCombobox] = useState(false)
 
-  function onSubmit(data: any) {
-    console.log(data)
-    onOpenChange(false)
-    form.reset()
+  async function onSubmit(data: TransactionFormValues) {
+    try {
+      const formattedDate = format(data.date, "yyyy-MM-dd")
+      
+      const amount = Number.parseFloat(data.amount)
+      if (isNaN(amount) || amount <= 0) {
+        console.error("Amount must be a positive number")
+        alert("Amount must be a positive number")
+        return
+      }
+      
+      const transactionData = {
+        ...data,
+        amount: amount,
+        date: formattedDate,
+      }
+      
+      console.log("Submitting transaction data:", transactionData)
+      
+      if (transactionToEdit) {
+        await updateTransaction(transactionToEdit.id || transactionToEdit._key || "", transactionData)
+      } else {
+        await addTransaction(transactionData)
+      }
+      
+      onOpenChange(false)
+      form.reset()
+      console.log(transactionToEdit ? "Transaction updated" : "Transaction added")
+      alert(transactionToEdit ? "Transaction updated" : "Transaction added")
+    } catch (error) {
+      console.error("Error saving transaction:", error)
+      alert(`Failed to ${transactionToEdit ? "update" : "add"} transaction`)
+    }
+  }
+
+  const getIdValue = (item: any): string => {
+    return (item.id || item._key || "").toString();
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add Transaction</DialogTitle>
+          <DialogTitle>{transactionToEdit ? "Edit Transaction" : "Add Transaction"}</DialogTitle>
           <DialogDescription>Enter the details of your transaction below.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -94,7 +184,7 @@ export function AddTransactionModal({
             />
             <FormField
               control={form.control}
-              name="category"
+              name="categoryId"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
                   <FormLabel>Category</FormLabel>
@@ -107,7 +197,7 @@ export function AddTransactionModal({
                           className={cn("w-full justify-between", !field.value && "text-muted-foreground")}
                         >
                           {field.value
-                            ? categories.find((category) => category.value === field.value)?.label
+                            ? categories.find((category) => getIdValue(category) === field.value)?.name
                             : "Select category"}
                           <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                         </Button>
@@ -121,20 +211,20 @@ export function AddTransactionModal({
                           <CommandGroup>
                             {categories.map((category) => (
                               <CommandItem
-                                value={category.label}
-                                key={category.value}
+                                value={getIdValue(category)}
+                                key={getIdValue(category)}
                                 onSelect={() => {
-                                  form.setValue("category", category.value)
+                                  form.setValue("categoryId", getIdValue(category))
                                   setOpenCategoryCombobox(false)
                                 }}
                               >
                                 <CheckIcon
                                   className={cn(
                                     "mr-2 h-4 w-4",
-                                    category.value === field.value ? "opacity-100" : "opacity-0",
+                                    getIdValue(category) === field.value ? "opacity-100" : "opacity-0",
                                   )}
                                 />
-                                {category.label}
+                                {category.name}
                               </CommandItem>
                             ))}
                           </CommandGroup>
@@ -193,11 +283,35 @@ export function AddTransactionModal({
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="accountId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Account</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select account" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {accounts.map((account) => (
+                        <SelectItem key={getIdValue(account)} value={getIdValue(account)}>
+                          {account.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancel
               </Button>
-              <Button type="submit">Save Transaction</Button>
+              <Button type="submit">{transactionToEdit ? "Update" : "Save"} Transaction</Button>
             </DialogFooter>
           </form>
         </Form>

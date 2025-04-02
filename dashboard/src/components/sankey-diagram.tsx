@@ -1,10 +1,15 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Sankey, Tooltip } from "recharts"
+import dynamic from "next/dynamic"
+import { useTransactionStore } from "@/lib/store/transaction-store"
+
+// Dynamically import Recharts components with no SSR
+const RechartsComponents = dynamic(() => import("./recharts-sankey"), { ssr: false })
 
 interface SankeyNode {
   name: string;
+  type?: string;
 }
 
 interface SankeyLink {
@@ -20,6 +25,17 @@ interface SankeyData {
 
 const MyCustomNode = (props: any) => {
   const { x, y, width, height, payload } = props;
+  
+  // Different colors based on node type (income, expense, category)
+  let fill = "#77c878"; // Default green
+  
+  if (payload.type === "income") {
+    fill = "#4ade80"; // Green for income
+  } else if (payload.type === "expense") {
+    fill = "#f87171"; // Red for expense
+  } else if (payload.type === "category") {
+    fill = "#60a5fa"; // Blue for categories
+  }
 
   return (
     <g>
@@ -28,7 +44,7 @@ const MyCustomNode = (props: any) => {
         y={y}
         width={width}
         height={height}
-        fill="#77c878"
+        fill={fill}
         fillOpacity="0.8"
       />
       <text
@@ -45,42 +61,90 @@ const MyCustomNode = (props: any) => {
 };
 
 export function SankeyDiagram() {
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [hasError, setHasError] = useState(false);
-  const [data] = useState<SankeyData>({
-    nodes: [
-      { name: "Visit" },
-      { name: "Direct-Favourite" },
-      { name: "Page-Click" },
-      { name: "Detail-Favourite" },
-      { name: "Lost" }
-    ],
-    links: [
-      { source: 0, target: 1, value: 3728.3 },
-      { source: 0, target: 2, value: 354170 },
-      { source: 2, target: 3, value: 62429 },
-      { source: 2, target: 4, value: 291741 }
-    ]
-  });
+  const { transactions, fetchTransactions, isLoading, error } = useTransactionStore();
+  const [sankeyData, setSankeyData] = useState<SankeyData>({ nodes: [], links: [] });
 
   useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setIsLoaded(true);
-    }, 500);
+    fetchTransactions();
+  }, [fetchTransactions]);
 
-    return () => clearTimeout(timer);
-  }, []);
+  useEffect(() => {
+    if (transactions.length > 0) {
+      generateSankeyData(transactions);
+    }
+  }, [transactions]);
 
-  if (hasError) {
+  const generateSankeyData = (transactions) => {
+    const nodes: SankeyNode[] = [];
+    const links: SankeyLink[] = [];
+    
+    const nodeIndices = new Map<string, number>();
+    
+    nodes.push({ name: "Income", type: "income" });
+    nodeIndices.set("Income", 0);
+    
+    const categories = new Set<string>();
+    transactions.forEach(tx => {
+      if (tx.categoryId) {
+        categories.add(tx.categoryId);
+      }
+    });
+    
+    Array.from(categories).forEach((category, index) => {
+      nodes.push({ name: category, type: "category" });
+      nodeIndices.set(category, nodes.length - 1);
+    });
+    
+    nodes.push({ name: "Expenses", type: "expense" });
+    nodeIndices.set("Expenses", nodes.length - 1);
+    
+    const categoryTotals = new Map<string, number>();
+    const categoryExpenseTotals = new Map<string, number>();
+    
+    transactions.forEach(tx => {
+      if (!tx.categoryId) return;
+      
+      if (tx.type === "income") {
+        const currentTotal = categoryTotals.get(tx.categoryId) || 0;
+        categoryTotals.set(tx.categoryId, currentTotal + tx.amount);
+      } else if (tx.type === "expense") {
+        const currentTotal = categoryExpenseTotals.get(tx.categoryId) || 0;
+        categoryExpenseTotals.set(tx.categoryId, currentTotal + tx.amount);
+      }
+    });
+    
+    categoryTotals.forEach((value, category) => {
+      if (value > 0) {
+        links.push({
+          source: nodeIndices.get("Income") || 0,
+          target: nodeIndices.get(category) || 0,
+          value: value
+        });
+      }
+    });
+    
+    categoryExpenseTotals.forEach((value, category) => {
+      if (value > 0) {
+        links.push({
+          source: nodeIndices.get(category) || 0,
+          target: nodeIndices.get("Expenses") || 0,
+          value: value
+        });
+      }
+    });
+    
+    setSankeyData({ nodes, links });
+  };
+
+  if (error) {
     return (
       <div className="flex h-[500px] items-center justify-center">
-        <p className="text-muted-foreground">Unable to load flow diagram</p>
+        <p className="text-muted-foreground">Error loading flow diagram: {error}</p>
       </div>
     );
   }
 
-  if (!isLoaded) {
+  if (isLoading || transactions.length === 0) {
     return (
       <div className="flex h-[500px] items-center justify-center">
         <p className="text-muted-foreground">Loading flow diagram...</p>
@@ -89,23 +153,8 @@ export function SankeyDiagram() {
   }
 
   return (
-    <div className="h-[500px] w-full">
-      <Sankey
-        width={960}
-        height={500}
-        data={data}
-        node={<MyCustomNode />}
-        nodePadding={50}
-        margin={{
-          left: 200,
-          right: 200,
-          top: 100,
-          bottom: 100,
-        }}
-        link={{ stroke: '#77c878' }}
-      >
-        <Tooltip />
-      </Sankey>
+    <div className="h-[500px] w-full overflow-x-auto">
+      <RechartsComponents sankeyData={sankeyData} />
     </div>
   );
 }

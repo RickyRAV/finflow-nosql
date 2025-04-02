@@ -11,60 +11,67 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useAccountStore } from '@/stores/useAccountStore'
+import { useAuthStore } from "@/lib/store/auth-store"
+import { useAccountStore } from "@/lib/store/account-store"
 
 export function LoginPage() {
   const router = useRouter()
   const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState("")
+  const [name, setName] = useState("")
   const [password, setPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [passwordError, setPasswordError] = useState("")
 
-  const createAccount = useAccountStore(state => state.createAccount)
+  const { login, register, isLoading } = useAuthStore()
+
+  const { addAccount } = useAccountStore()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
 
-    // Simulate login
-    setTimeout(() => {
-      setIsLoading(false)
+    try {
+      await login(email, password)
       router.push("/dashboard")
-    }, 1000)
+    } catch (error) {
+      console.error("Login failed:", error)
+    }
   }
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
+
+    if (password !== confirmPassword) {
+      setPasswordError("Passwords do not match")
+      return
+    }
+
+    setPasswordError("")
 
     try {
-      // Create default accounts for new user
-      await createAccount({
+      await register(email, name || 'New User', password)
+
+      await addAccount({
         name: "Main Checking",
         type: "checking",
         balance: 0,
         currency: "USD",
         isActive: true,
-        description: "Primary checking account",
+        description: "Primary checking account"
       })
 
-      await createAccount({
+      await addAccount({
         name: "Savings",
         type: "savings",
         balance: 0,
         currency: "USD",
         isActive: true,
-        description: "Main savings account",
+        description: "Main savings account"
       })
 
-      // Simulate registration success
-      setTimeout(() => {
-        setIsLoading(false)
-        router.push("/dashboard")
-      }, 1000)
+      router.push("/dashboard")
     } catch (error) {
-      console.error("Error creating accounts:", error)
-      setIsLoading(false)
+      console.error("Registration failed:", error)
     }
   }
 
@@ -148,7 +155,25 @@ export function LoginPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="register-email">Email</Label>
-                  <Input id="register-email" type="email" placeholder="name@example.com" required />
+                  <Input
+                    id="register-email"
+                    type="email"
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Name</Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="register-password">Password</Label>
@@ -157,6 +182,8 @@ export function LoginPage() {
                       id="register-password"
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       required
                     />
                     <Button
@@ -173,7 +200,15 @@ export function LoginPage() {
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="confirm-password">Confirm Password</Label>
-                  <Input id="confirm-password" type="password" placeholder="••••••••" required />
+                  <Input
+                    id="confirm-password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                  />
+                  {passwordError && <p className="text-sm text-red-500">{passwordError}</p>}
                 </div>
               </CardContent>
               <CardFooter>

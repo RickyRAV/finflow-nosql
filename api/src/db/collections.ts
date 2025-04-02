@@ -20,7 +20,7 @@ export async function ensureCollections(c: Context) {
     }
   }
 
-  // Create indexes for better performance
+  // indexes for better performance
   const transactions = db.collection(COLLECTIONS.TRANSACTIONS);
   await transactions.ensureIndex({
     type: "persistent",

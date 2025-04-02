@@ -25,19 +25,16 @@ const QuerySchema = z.object({
 });
 
 const transactionsRoutes = new Hono()
-  // Create transaction
   .post('/', zValidator('json', TransactionSchema), async (c) => {
     const data = c.req.valid('json');
     const result = await TransactionService.createTransaction(c, data);
     return c.json(result, 201);
   })
-  // Get all transactions with filters
   .get('/', zValidator('query', QuerySchema), async (c) => {
     const query = c.req.valid('query');
     const transactions = await TransactionService.getTransactions(c, query);
     return c.json(transactions);
   })
-  // Get transaction by ID
   .get('/:id', async (c) => {
     const id = c.req.param('id');
     const transaction = await TransactionService.getTransactionById(c, id);
@@ -46,7 +43,6 @@ const transactionsRoutes = new Hono()
     }
     return c.json(transaction);
   })
-  // Update transaction
   .put('/:id', zValidator('json', TransactionSchema), async (c) => {
     const id = c.req.param('id');
     const data = c.req.valid('json');
@@ -56,7 +52,6 @@ const transactionsRoutes = new Hono()
     }
     return c.json(updated);
   })
-  // Delete transaction
   .delete('/:id', async (c) => {
     const id = c.req.param('id');
     const deleted = await TransactionService.deleteTransaction(c, id);
@@ -65,7 +60,6 @@ const transactionsRoutes = new Hono()
     }
     return c.json({ success: true });
   })
-  // Sankey diagram data
   .get('/sankey', async (c) => {
     const startDate = c.req.query('startDate') || new Date(new Date().getFullYear(), 0, 1).toISOString();
     const endDate = c.req.query('endDate') || new Date().toISOString();
@@ -73,7 +67,6 @@ const transactionsRoutes = new Hono()
     const flowData = await TransactionService.getSankeyData(c, startDate, endDate);
     return c.json(flowData);
   })
-  // Monthly report
   .get('/report/:year/:month', async (c) => {
     const year = parseInt(c.req.param('year'));
     const month = parseInt(c.req.param('month')) - 1;

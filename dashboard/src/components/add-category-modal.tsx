@@ -30,7 +30,6 @@ export function AddCategoryModal({
     },
   })
 
-  // Update form when editing a category
   useEffect(() => {
     if (category) {
       form.reset({

@@ -15,7 +15,6 @@ export function SpendingByCategory() {
   const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
-    // Simulate loading
     const timer = setTimeout(() => {
       setIsLoaded(true)
     }, 500)
@@ -31,7 +30,6 @@ export function SpendingByCategory() {
     )
   }
 
-  // Calculate total for percentages
   const total = data.reduce((sum, item) => sum + item.value, 0)
 
   return (
@@ -41,25 +39,20 @@ export function SpendingByCategory() {
           <div className="relative h-40 w-40">
             <svg viewBox="0 0 100 100" className="h-full w-full">
               {data.map((item, index) => {
-                // Calculate the pie slice
                 const startAngle =
                   index > 0 ? (data.slice(0, index).reduce((sum, d) => sum + d.value, 0) / total) * 360 : 0
                 const endAngle = startAngle + (item.value / total) * 360
 
-                // Convert to radians
                 const startRad = ((startAngle - 90) * Math.PI) / 180
                 const endRad = ((endAngle - 90) * Math.PI) / 180
 
-                // Calculate the path
                 const x1 = 50 + 40 * Math.cos(startRad)
                 const y1 = 50 + 40 * Math.sin(startRad)
                 const x2 = 50 + 40 * Math.cos(endRad)
                 const y2 = 50 + 40 * Math.sin(endRad)
 
-                // Determine if the arc should be drawn the long way around
                 const largeArcFlag = endAngle - startAngle > 180 ? 1 : 0
 
-                // Create the path
                 const path = `M 50 50 L ${x1} ${y1} A 40 40 0 ${largeArcFlag} 1 ${x2} ${y2} Z`
 
                 return <path key={index} d={path} fill={item.color} stroke="#fff" strokeWidth="1" />

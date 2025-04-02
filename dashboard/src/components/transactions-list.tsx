@@ -1,60 +1,55 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { ArrowDownIcon, ArrowUpIcon } from "lucide-react"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
-
-// Mock data for recent transactions
-const recentTransactions = [
-  {
-    id: "1",
-    date: new Date("2023-04-01"),
-    description: "Rent Payment",
-    category: "Housing",
-    amount: 1200,
-    type: "expense",
-  },
-  {
-    id: "2",
-    date: new Date("2023-04-02"),
-    description: "Salary Deposit",
-    category: "Income",
-    amount: 3000,
-    type: "income",
-  },
-  {
-    id: "3",
-    date: new Date("2023-04-03"),
-    description: "Grocery Shopping",
-    category: "Food",
-    amount: 150.75,
-    type: "expense",
-  },
-  {
-    id: "4",
-    date: new Date("2023-04-05"),
-    description: "Gas Station",
-    category: "Transportation",
-    amount: 45.5,
-    type: "expense",
-  },
-  {
-    id: "5",
-    date: new Date("2023-04-07"),
-    description: "Movie Tickets",
-    category: "Entertainment",
-    amount: 30,
-    type: "expense",
-  },
-]
+import { useTransactionStore } from "@/lib/store/transaction-store"
+import { Transaction } from "@/lib/api-client"
 
 export function TransactionsList({ limit = 5 }: { limit?: number }) {
-  const transactions = recentTransactions.slice(0, limit)
+  const { transactions, fetchTransactions, isLoading, error } = useTransactionStore()
+  
+  useEffect(() => {
+    console.log("TransactionsList: Fetching transactions")
+    fetchTransactions()
+  }, [fetchTransactions])
+
+  const recentTransactions = transactions && transactions.length > 0
+    ? transactions
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, limit)
+    : []
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        {Array(limit).fill(0).map((_, i) => (
+          <div key={i} className="flex items-center">
+            <div className="h-9 w-9 rounded-full bg-slate-200" />
+            <div className="ml-4 space-y-1 flex-1">
+              <div className="h-4 w-full bg-slate-200 rounded" />
+              <div className="h-3 w-24 bg-slate-200 rounded" />
+            </div>
+            <div className="h-4 w-16 ml-auto bg-slate-200 rounded" />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
+  if (error) {
+    return <div className="text-red-500">Error loading transactions: {error}</div>
+  }
+
+  if (!transactions || recentTransactions.length === 0) {
+    return <div className="text-center text-muted-foreground">No transactions found</div>
+  }
 
   return (
     <div className="space-y-4">
-      {transactions.map((transaction) => (
-        <div key={transaction.id} className="flex items-center">
+      {recentTransactions.map((transaction) => (
+        <div key={transaction.id || transaction._key} className="flex items-center">
           <div
             className={cn(
               "flex h-9 w-9 items-center justify-center rounded-full",
@@ -70,7 +65,7 @@ export function TransactionsList({ limit = 5 }: { limit?: number }) {
           <div className="ml-4 space-y-1">
             <p className="text-sm font-medium leading-none">{transaction.description}</p>
             <p className="text-sm text-muted-foreground">
-              {transaction.category} • {format(transaction.date, "MMM dd")}
+              {transaction.categoryId} • {format(new Date(transaction.date), "MMM dd")}
             </p>
           </div>
           <div className="ml-auto font-medium">

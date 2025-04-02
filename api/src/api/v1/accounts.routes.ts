@@ -12,19 +12,17 @@ const AccountSchema = z.object({
   description: z.string().optional()
 });
 
+// MOCK AUTH
 const accountRoutes = new Hono()
-  // Create account
   .post('/', zValidator('json', AccountSchema), async (c) => {
     const data = c.req.valid('json');
     const result = await AccountService.createAccount(c, data);
     return c.json(result, 201);
   })
-  // Get all accounts
   .get('/', async (c) => {
     const accounts = await AccountService.getAccounts(c);
     return c.json(accounts);
   })
-  // Get account by ID
   .get('/:id', async (c) => {
     const id = c.req.param('id');
     const account = await AccountService.getAccountById(c, id);
@@ -33,7 +31,6 @@ const accountRoutes = new Hono()
     }
     return c.json(account);
   })
-  // Update account
   .put('/:id', zValidator('json', AccountSchema), async (c) => {
     const id = c.req.param('id');
     const data = c.req.valid('json');
@@ -43,7 +40,6 @@ const accountRoutes = new Hono()
     }
     return c.json(updated);
   })
-  // Delete account
   .delete('/:id', async (c) => {
     const id = c.req.param('id');
     const deleted = await AccountService.deleteAccount(c, id);

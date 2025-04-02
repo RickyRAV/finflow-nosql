@@ -40,7 +40,6 @@ export function MonthlyChart() {
   const [isLoaded, setIsLoaded] = useState(false)
 
   useEffect(() => {
-    // Simulate loading
     const timer = setTimeout(() => {
       setIsLoaded(true)
     }, 500)
@@ -56,11 +55,10 @@ export function MonthlyChart() {
     )
   }
 
-  // Find the maximum value for scaling
   const maxValue = Math.max(...data.map((item) => Math.max(item.income, item.expenses)))
 
   return (
-    <div className="h-[300px]">
+    <div className="h-[300px] mb-24">
       <div className="flex h-full flex-col">
         <div className="flex-1">
           <div className="flex h-full items-end justify-between">

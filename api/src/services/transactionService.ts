@@ -23,7 +23,6 @@ export class TransactionService {
       updatedAt: now
     };
     
-    // First, verify the account exists and get its balance
     const accountCursor = await db.query(aql`
       FOR a IN accounts
       FILTER a._key == ${transaction.accountId}
@@ -35,19 +34,16 @@ export class TransactionService {
       throw new Error('Account not found');
     }
     
-    // Calculate balance change
     const balanceChange = transaction.type === 'income' 
       ? transaction.amount 
       : (transaction.type === 'expense' ? -transaction.amount : 0);
     
-    // Create transaction
     const transCursor = await db.query(aql`
       INSERT ${doc} INTO transactions
       RETURN NEW
     `);
     const newTransaction = await transCursor.next();
     
-    // Update account balance
     await db.query(aql`
       FOR a IN accounts
       FILTER a._key == ${transaction.accountId}
@@ -113,7 +109,6 @@ export class TransactionService {
     const db = await createDb(c);
     const now = new Date().toISOString();
     
-    // Get old transaction
     const oldCursor = await db.query(aql`
       FOR t IN transactions
       FILTER t._key == ${id}
@@ -125,7 +120,6 @@ export class TransactionService {
       return null;
     }
     
-    // Calculate balance changes
     const oldBalanceChange = old.type === 'income' 
       ? old.amount 
       : (old.type === 'expense' ? -old.amount : 0);
@@ -134,7 +128,6 @@ export class TransactionService {
       ? transaction.amount 
       : (transaction.type === 'expense' ? -transaction.amount : 0);
     
-    // Update transaction
     const transCursor = await db.query(aql`
       FOR t IN transactions
       FILTER t._key == ${id}
@@ -144,7 +137,6 @@ export class TransactionService {
     `);
     const updated = await transCursor.next();
     
-    // Update account balance
     await db.query(aql`
       FOR a IN accounts
       FILTER a._key == ${transaction.accountId}
@@ -159,7 +151,6 @@ export class TransactionService {
   static async deleteTransaction(c: Context, id: string) {
     const db = await createDb(c);
     
-    // Get transaction before deletion
     const oldCursor = await db.query(aql`
       FOR t IN transactions
       FILTER t._key == ${id}
@@ -171,19 +162,16 @@ export class TransactionService {
       return null;
     }
     
-    // Calculate balance change to revert
     const balanceChange = old.type === 'income' 
       ? old.amount 
       : (old.type === 'expense' ? -old.amount : 0);
     
-    // Delete transaction
     await db.query(aql`
       FOR t IN transactions
       FILTER t._key == ${id}
       REMOVE t IN transactions
     `);
     
-    // Update account balance
     await db.query(aql`
       FOR a IN accounts
       FILTER a._key == ${old.accountId}

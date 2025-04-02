@@ -1,14 +1,22 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { CreditCardIcon, HomeIcon, TagIcon, DollarSignIcon, LogOutIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { AddTransactionButton } from "@/components/add-transaction-button"
+import { useAuthStore } from "@/lib/store/auth-store"
 
 export function MainNav() {
   const pathname = usePathname()
+  const router = useRouter()
+  const { logout } = useAuthStore()
+
+  const handleLogout = () => {
+    logout()
+    router.push("/")
+  }
 
   return (
     <div className="border-b">
@@ -51,12 +59,10 @@ export function MainNav() {
         </nav>
         <div className="ml-auto flex items-center space-x-4">
           <AddTransactionButton />
-          <Link href="/">
-            <Button variant="ghost" size="icon">
-              <LogOutIcon className="h-5 w-5" />
-              <span className="sr-only">Log out</span>
-            </Button>
-          </Link>
+          <Button variant="ghost" size="icon" onClick={handleLogout}>
+            <LogOutIcon className="h-5 w-5" />
+            <span className="sr-only">Log out</span>
+          </Button>
         </div>
       </div>
     </div>

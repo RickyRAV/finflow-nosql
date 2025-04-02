@@ -133,3 +133,196 @@ Content-Type: application/json
     "tags": ["transfer", "savings"],
     "notes": "Monthly savings transfer"
 }
+
+### ============ MOCK DATA POPULATION ============
+
+### Create Main Checking Account
+POST {{accountsUrl}}
+Content-Type: application/json
+
+{
+    "name": "Main Checking",
+    "type": "checking",
+    "balance": 3450,
+    "currency": "USD",
+    "isActive": true,
+    "description": "Primary checking account"
+}
+
+### Create Savings Account
+POST {{accountsUrl}}
+Content-Type: application/json
+
+{
+    "name": "Savings",
+    "type": "savings",
+    "balance": 2500,
+    "currency": "USD",
+    "isActive": true,
+    "description": "Main savings account"
+}
+
+### Create Salary Income Transaction
+POST {{transactionsUrl}}
+Content-Type: application/json
+
+{
+    "amount": 3000.00,
+    "description": "Salary Deposit",
+    "date": "2024-04-02",
+    "categoryId": "salary",
+    "type": "income",
+    "accountId": "8458",
+    "tags": ["salary", "monthly"],
+    "notes": "Monthly salary deposit"
+}
+
+### Create Freelance Income Transaction
+POST {{transactionsUrl}}
+Content-Type: application/json
+
+{
+    "amount": 450.00,
+    "description": "Freelance Payment",
+    "date": "2024-04-10",
+    "categoryId": "freelance",
+    "type": "income",
+    "accountId": "8458",
+    "tags": ["freelance", "income"],
+    "notes": "Web development project payment"
+}
+
+### Create Rent Expense
+POST {{transactionsUrl}}
+Content-Type: application/json
+
+{
+    "amount": 1200.00,
+    "description": "Rent Payment",
+    "date": "2024-04-01",
+    "categoryId": "housing",
+    "type": "expense",
+    "accountId": "8458",
+    "tags": ["housing", "monthly"],
+    "notes": "Monthly rent payment"
+}
+
+### Create Grocery Expense
+POST {{transactionsUrl}}
+Content-Type: application/json
+
+{
+    "amount": 150.75,
+    "description": "Grocery Shopping",
+    "date": "2024-04-03",
+    "categoryId": "food",
+    "type": "expense",
+    "accountId": "8458",
+    "tags": ["food", "groceries"],
+    "notes": "Weekly grocery shopping"
+}
+
+### Create Restaurant Expense
+POST {{transactionsUrl}}
+Content-Type: application/json
+
+{
+    "amount": 85.20,
+    "description": "Restaurant Dinner",
+    "date": "2024-04-12",
+    "categoryId": "food",
+    "type": "expense",
+    "accountId": "8458",
+    "tags": ["food", "dining"],
+    "notes": "Dinner with friends"
+}
+
+### Create Transportation Expense
+POST {{transactionsUrl}}
+Content-Type: application/json
+
+{
+    "amount": 45.50,
+    "description": "Gas Station",
+    "date": "2024-04-05",
+    "categoryId": "transportation",
+    "type": "expense",
+    "accountId": "8458",
+    "tags": ["transportation", "car"],
+    "notes": "Monthly fuel"
+}
+
+### Create Uber Expense
+POST {{transactionsUrl}}
+Content-Type: application/json
+
+{
+    "amount": 25.30,
+    "description": "Uber Ride",
+    "date": "2024-04-18",
+    "categoryId": "transportation",
+    "type": "expense",
+    "accountId": "8458",
+    "tags": ["transportation", "uber"],
+    "notes": "Late night ride"
+}
+
+### Create Entertainment Expense - Movie
+POST {{transactionsUrl}}
+Content-Type: application/json
+
+{
+    "amount": 30.00,
+    "description": "Movie Tickets",
+    "date": "2024-04-07",
+    "categoryId": "entertainment",
+    "type": "expense",
+    "accountId": "8458",
+    "tags": ["entertainment", "movies"],
+    "notes": "Weekend movie"
+}
+
+### Create Entertainment Expense - Concert
+POST {{transactionsUrl}}
+Content-Type: application/json
+
+{
+    "amount": 120.00,
+    "description": "Concert Tickets",
+    "date": "2024-04-20",
+    "categoryId": "entertainment",
+    "type": "expense",
+    "accountId": "8458",
+    "tags": ["entertainment", "concert"],
+    "notes": "Live music show"
+}
+
+### Create Internet Bill
+POST {{transactionsUrl}}
+Content-Type: application/json
+
+{
+    "amount": 60.00,
+    "description": "Internet Bill",
+    "date": "2024-04-15",
+    "categoryId": "housing",
+    "type": "expense",
+    "accountId": "8458",
+    "tags": ["utilities", "monthly"],
+    "notes": "Monthly internet service"
+}
+
+### Create Investment Income
+POST {{transactionsUrl}}
+Content-Type: application/json
+
+{
+    "amount": 50.00,
+    "description": "Investment Returns",
+    "date": "2024-04-25",
+    "categoryId": "investments",
+    "type": "income",
+    "accountId": "8458",
+    "tags": ["investments", "passive"],
+    "notes": "Monthly dividend payment"
+}

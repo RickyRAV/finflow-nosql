@@ -13,7 +13,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { AddCategoryModal } from "@/components/add-category-modal"
 
-// Mock data for categories
+// mock data for categories
 const categories = [
   {
     id: "1",

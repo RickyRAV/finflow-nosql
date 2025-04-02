@@ -49,7 +49,6 @@ export interface RecurringTransaction {
   accountId: string;
 }
 
-// For Sankey diagram data
 export interface FlowData {
   nodes: Array<{
     id: string;
