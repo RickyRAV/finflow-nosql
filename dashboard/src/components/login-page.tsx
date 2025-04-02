@@ -11,7 +11,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { createAccount } from "@/app/actions"
+import { useAccountStore } from '@/stores/useAccountStore'
 
 export function LoginPage() {
   const router = useRouter()
@@ -19,6 +19,8 @@ export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+
+  const createAccount = useAccountStore(state => state.createAccount)
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
